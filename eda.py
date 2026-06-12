@@ -16,6 +16,11 @@ Notes:
 
 #%% LIB
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.io as pio
+pio.renderers.default='browser'
 pd.set_option('display.max_columns', None)
 
 #%% LOAD & TRANSFORM  DATA
@@ -42,3 +47,96 @@ df['Sub_metering_0'] = df['Global_active_power']*1000/60 - df['Sub_metering_1'] 
     
 df.head()
 df.info()
+len(df)
+
+
+#%% PLOT
+# Transform before plot
+df_plot = df[[
+    'datetime', 
+    'Sub_metering_0', 
+    'Sub_metering_1', 
+    'Sub_metering_2', 
+    'Sub_metering_3', 
+    'Global_reactive_power'
+    ]]
+df_plot = df_plot.melt(
+    id_vars='datetime',
+    value_vars=[
+        'Sub_metering_0', 
+        'Sub_metering_1', 
+        'Sub_metering_2', 
+        'Sub_metering_3', 
+        'Global_reactive_power'
+        ],
+    var_name='metering',
+    value_name='energy_in_kwh'
+    )
+
+
+def plot_usage_over_time(
+        df, 
+        datetime_from,
+        datetime_to,
+        mode='absolute',
+        ):
+    # CAT_COLOR = {
+    #     'nums_unique_not_ai_user': "#696FC7",
+    #     'nums_unique_ai_user': "#A1BC98", 
+    #     }
+    df = df[
+        (df['datetime']>=datetime_from)
+        &(df['datetime']<=datetime_to)
+         ]
+    
+    fig = px.area(
+        df,
+        x="datetime",
+        y="energy_in_kwh",
+        color="metering",
+        # color_discrete_map=CAT_COLOR,
+        title="Số HS học trên hệ thống mỗi ngày",
+        # labels={
+        #     "metering": "",
+        #     "energy_in_kwh": (
+        #         "Số HS" if mode == 'absolute' else
+        #         'Tỉ lệ HS (%)'
+        #         ),
+        #     "datetime": "Ngày",
+        # },
+    )
+    if mode == 'relative':
+        fig.update_traces(groupnorm='percent')
+    fig.update_layout(
+        height=500,
+        template="plotly_white",
+        hovermode="x unified",
+        legend=dict(
+            orientation='h',
+            y=-0.5,
+            x=0.5,
+            xanchor='center',
+            yanchor='bottom'
+            )
+        )
+    fig.for_each_trace(
+        lambda t: t.update(
+            name={
+                'Sub_metering_1': 'kitchen',
+                'Sub_metering_2': 'laundry_room',
+                'Sub_metering_3': 'water_heater_and_air_conditioner',
+                'Sub_metering_0': 'other_rooms',
+                'Global_reactive_power': 'reactive_power_source'
+                }[t.name]
+            )
+        )
+    fig.show()
+
+
+plot_usage_over_time(
+    df_plot, 
+    datetime_from='2010-11-20',
+    datetime_to='2010-11-26',
+    mode='absolute'
+    )
+
