@@ -1,6 +1,8 @@
+#%% LIB
 import torch
 import torch.nn as nn
 
+#%% GRU cell
 class GRUCell(nn.Module):
     def __init__(self, input_size, hidden_size):
         super().__init__()
@@ -32,6 +34,7 @@ class GRUCell(nn.Module):
         h = (1 - z) * h_prev + z * h_tilde
         return h
     
+#%% GRU model  
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size):
         super().__init__()
@@ -40,7 +43,6 @@ class GRU(nn.Module):
         
     def forward(self, x, h0=None):
         batch_size, sequence_length, _ = x.shape
-        
         if h0 is None:
             h = torch.zeros(
                 batch_size,
@@ -48,26 +50,27 @@ class GRU(nn.Module):
                 device=x.device
                 )
         else:
-            h = h0
-        
+            h = h0  
         outputs = []
         for t in range(sequence_length):
+            # update h0 -> h1 -> h2 -> h3 -> ... -> hT
             h = self.cell(x[:, t, :], h)
             outputs.append(h)
         outputs = torch.stack(outputs, dim=1)
         return outputs, h
+    
+#%% GRU Regression    
+class GRURegressor(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size=1):
+        super().__init__()
+        self.gru = GRU(input_size, hidden_size)
+        self.fc = nn.Linear(
+            hidden_size,
+            output_size
+            )
         
-
-
-
-
-my_gru = GRU(
-    input_size=10,
-    hidden_size=20
-)
-x = torch.randn(8, 15, 10)
-
-out, h = my_gru(x)
-
-print(out.shape)
-print(h.shape)
+    def forward(self, x):
+        outputs, h = self.gru(x)
+        prediction = self.fc(h)
+        return prediction
+    
