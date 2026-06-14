@@ -50,14 +50,11 @@ class GRU(nn.Module):
                 device=x.device
                 )
         else:
-            h = h0  
-        outputs = []
+            h = h0
         for t in range(sequence_length):
             # update h0 -> h1 -> h2 -> h3 -> ... -> hT
             h = self.cell(x[:, t, :], h)
-            outputs.append(h)
-        outputs = torch.stack(outputs, dim=1)
-        return outputs, h
+        return h
     
 #%% GRU Regression    
 class GRURegressor(nn.Module):
@@ -68,9 +65,8 @@ class GRURegressor(nn.Module):
             hidden_size,
             output_size
             )
-        
+
     def forward(self, x):
-        outputs, h = self.gru(x)
+        h = self.gru(x)
         prediction = self.fc(h)
         return prediction
-    
