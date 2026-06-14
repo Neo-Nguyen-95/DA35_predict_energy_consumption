@@ -20,7 +20,11 @@ series = torch.sin(0.05 * t)
 noise = 0.1 * torch.randn_like(series)
 noise_series = series + noise
 
+sns.set_theme(style='whitegrid', context='notebook')
 sns.lineplot(x=t, y=noise_series)
+plt.title('Sine wave with noise')
+plt.xlabel('Timestep')
+plt.ylabel('Value')
 plt.show()
 
 # ---------------------------------------------------
@@ -77,8 +81,8 @@ model, training_loss = train(
 # ---------------------------------------------------
 # Eval 0: Training losss
 # ---------------------------------------------------
-sns.set_theme(style='whitegrid', context='notebook')
-plt.figure(figsize=(10, 6))
+
+plt.figure()
 sns.lineplot(training_loss)
 plt.title('Loss plot')
 plt.xlabel('Epoch')
@@ -93,7 +97,7 @@ with torch.no_grad():
 
 pred_numpy = pred.detach().cpu().numpy().flatten()
 
-plt.figure(figsize=(10, 6))
+plt.figure()
 ax = sns.lineplot(x=t[20:], y=series[20:], label='True sin wave')
 ax = sns.lineplot(x=t[20:], y=pred_numpy, label='Predict value')
 ax.legend(loc="upper right")
