@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.io as pio
 pio.renderers.default='browser'
 
-#%% PLOT 1
+#%% PLOT 1: ALL TIME STEP
 def plot_consumption_from_different_sources_series(
         df, 
         datetime_from,
@@ -80,22 +80,16 @@ def plot_consumption_from_different_sources_series(
         )
     fig.show()
     
-#%% PLOT 2
-def plot_consumption_daily(df):
-    df_plot = (
-        df
-        .groupby('Date')['Total_power_consumption']
-        .sum()
-        .reset_index(name='Daily_power_consumption')
-        )
+#%% PLOT 2: DAILY
+def plot_consumption_daily(df_daily):
     fig = px.line(
-        df_plot,
+        df_daily,
         x='Date',
         y='Daily_power_consumption'
         )
     fig.show()
     
-#%% PLOT 3
+#%% PLOT 3: WEEKLY
 def process_weekly_energy_consumption(df, col):
     df_result = (
         df

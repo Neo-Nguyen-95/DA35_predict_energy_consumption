@@ -18,6 +18,8 @@ Ref: https://archive.ics.uci.edu/dataset/235/individual+household+electric+power
 
 #%% LIB
 import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf
 
 from src.data.input_data import fetch_and_transform_data
 from src.plot import (
@@ -35,6 +37,20 @@ df.head()
 df.info()
 len(df)
 
+df_daily = (
+    df
+    .groupby('Date')['Total_power_consumption']
+    .sum()
+    .reset_index(name='Daily_power_consumption')
+    )
+
+df_weekly = (
+    df
+    .groupby('week')['Total_power_consumption']
+    .sum()
+    .reset_index(name='Weekly_energy_consumption')
+    )
+
 #%% PLOT
 plot_consumption_from_different_sources_series(
     df, 
@@ -43,6 +59,14 @@ plot_consumption_from_different_sources_series(
     mode='absolute'
     )
 
-plot_consumption_daily(df)
+plot_consumption_daily(df_daily)
 
 plot_consumption_weekly(df, mode='absolute')
+
+#%% ANALYSIS
+
+plot_acf(df_daily['Daily_power_consumption'], lags=150)
+plt.show()
+
+plot_acf(df_weekly['Weekly_energy_consumption'], lags=60)
+plt.show()
