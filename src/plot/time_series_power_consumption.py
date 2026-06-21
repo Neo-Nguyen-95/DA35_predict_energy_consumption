@@ -80,6 +80,88 @@ def plot_consumption_from_different_sources_series(
             )
         )
     fig.show()
+
+
+def plot_consumption_from_different_sources_weekly_series(
+        df,
+        week_from=None,
+        week_to=None,
+        mode='absolute',
+        ):
+    df_plot = df[[
+        'week',
+        'Sub_metering_0',
+        'Sub_metering_1',
+        'Sub_metering_2',
+        'Sub_metering_3',
+        'Reactive_power_consumption'
+        ]]
+    df_plot = df_plot.melt(
+        id_vars='week',
+        value_vars=[
+            'Sub_metering_0',
+            'Sub_metering_1',
+            'Sub_metering_2',
+            'Sub_metering_3',
+            'Reactive_power_consumption'
+            ],
+        var_name='metering',
+        value_name='energy_in_wh'
+        )
+    df_plot = (
+        df_plot
+        .groupby(['week', 'metering'])['energy_in_wh']
+        .sum()
+        .reset_index()
+        )
+
+    if week_from is not None:
+        df_plot = df_plot[df_plot['week'] >= pd.to_datetime(week_from)]
+    if week_to is not None:
+        df_plot = df_plot[df_plot['week'] <= pd.to_datetime(week_to)]
+
+    fig = px.area(
+        df_plot,
+        x="week",
+        y="energy_in_wh",
+        color="metering",
+        title="Weekly energy consumption of a household",
+        labels={
+            "metering": "Meters",
+            "energy_in_wh": (
+                "Energy Consumption (Wh)" if mode == 'absolute' else
+                'Energy Proportion (%)'
+                ),
+            "week": "Week",
+        },
+    )
+    if mode == 'relative':
+        fig.update_traces(groupnorm='percent')
+    fig.update_layout(
+        # height=700,
+        # width=400,
+        template="plotly_white",
+        hovermode="x unified",
+        legend=dict(
+            orientation='h',
+            y=-0.5,
+            x=0.5,
+            xanchor='center',
+            yanchor='bottom'
+            )
+        )
+    fig.for_each_trace(
+        lambda t: t.update(
+            name={
+                'Sub_metering_1': 'kitchen',
+                'Sub_metering_2': 'laundry_room',
+                'Sub_metering_3': 'water_heater_and_air_conditioner',
+                'Sub_metering_0': 'other_rooms',
+                'Reactive_power_consumption': 'reactive_power_source'
+                }[t.name]
+            )
+        )
+    fig.show()
     
 #%% PLOT 2: DAILY
 def plot_consumption_daily(df_daily):

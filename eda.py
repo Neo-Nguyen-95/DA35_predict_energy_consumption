@@ -28,6 +28,7 @@ from src.service.transform_data import (
     )
 from src.plot import (
     plot_consumption_from_different_sources_series,
+    plot_consumption_from_different_sources_weekly_series,
     plot_consumption_daily,
     plot_consumption_weekly
     )
@@ -47,19 +48,26 @@ df_weekly = get_weekly_data(df)
 #%% PLOT
 plot_consumption_from_different_sources_series(
     df, 
-    datetime_from='2010-11-01',
+    datetime_from='2010-11-20',
     datetime_to='2010-11-26',
-    mode='absolute'
+    mode='relative'
     )
 
-plot_consumption_daily(df_daily)
+plot_consumption_from_different_sources_weekly_series(
+    df,
+    week_from='2010-11-15',
+    week_to='2010-11-22',
+    mode='relative'
+    )
 
-plot_consumption_weekly(df, mode='absolute')
+# plot_consumption_daily(df_daily)
+
+# plot_consumption_weekly(df, mode='absolute')
 
 #%% ANALYSIS
 
-plot_acf(df_daily['Daily_power_consumption'], lags=400)
-plt.show()
+# plot_acf(df_daily['Daily_power_consumption'], lags=400)
+# plt.show()
 
-plot_acf(df_weekly['Weekly_energy_consumption'], lags=60)
-plt.show()
+# plot_acf(df_weekly['Weekly_energy_consumption'], lags=60)
+# plt.show()
