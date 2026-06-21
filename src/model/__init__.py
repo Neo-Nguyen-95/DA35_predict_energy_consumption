@@ -6,3 +6,6 @@ Created on Sat Jun 13 16:50:23 2026
 @author: neonguyen
 """
 
+from .train import train
+
+__all__ = ["train"]

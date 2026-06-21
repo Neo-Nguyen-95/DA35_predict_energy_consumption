@@ -21,7 +21,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.graphics.tsaplots import plot_acf
 
-from src.data.input_data import fetch_and_transform_data
+from src.service.input_data import fetch_and_transform_data
+from src.service.transform_data import (
+    get_daily_data,
+    get_weekly_data
+    )
 from src.plot import (
     plot_consumption_from_different_sources_series,
     plot_consumption_daily,
@@ -37,24 +41,13 @@ df.head()
 df.info()
 len(df)
 
-df_daily = (
-    df
-    .groupby('Date')['Total_power_consumption']
-    .sum()
-    .reset_index(name='Daily_power_consumption')
-    )
-
-df_weekly = (
-    df
-    .groupby('week')['Total_power_consumption']
-    .sum()
-    .reset_index(name='Weekly_energy_consumption')
-    )
+df_daily = get_daily_data(df)
+df_weekly = get_weekly_data(df)
 
 #%% PLOT
 plot_consumption_from_different_sources_series(
     df, 
-    datetime_from='2010-11-20',
+    datetime_from='2010-11-01',
     datetime_to='2010-11-26',
     mode='absolute'
     )
@@ -65,7 +58,7 @@ plot_consumption_weekly(df, mode='absolute')
 
 #%% ANALYSIS
 
-plot_acf(df_daily['Daily_power_consumption'], lags=150)
+plot_acf(df_daily['Daily_power_consumption'], lags=400)
 plt.show()
 
 plot_acf(df_weekly['Weekly_energy_consumption'], lags=60)

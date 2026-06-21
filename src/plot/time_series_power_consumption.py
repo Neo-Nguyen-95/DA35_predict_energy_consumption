@@ -46,7 +46,7 @@ def plot_consumption_from_different_sources_series(
         title="Energy consumption of a household (measured each minute)",
         labels={
             "metering": "Meters",
-            "energy_in_kwh": (
+            "energy_in_wh": (
                 "Energy Consumption (Wh)" if mode == 'absolute' else
                 'Energy Proportion (%)'
                 ),
@@ -56,7 +56,8 @@ def plot_consumption_from_different_sources_series(
     if mode == 'relative':
         fig.update_traces(groupnorm='percent')
     fig.update_layout(
-        height=500,
+        # height=700,
+        # width=400,
         template="plotly_white",
         hovermode="x unified",
         legend=dict(
@@ -85,7 +86,16 @@ def plot_consumption_daily(df_daily):
     fig = px.line(
         df_daily,
         x='Date',
-        y='Daily_power_consumption'
+        y='Daily_power_consumption',
+        title="Daily energy consumption of a household (Wh)",
+        labels={
+            "Daily_power_consumption": "Energy consumption (Wh)",
+        },
+        )
+    fig.update_layout(
+        # height=400,
+        # width=700,
+        template="plotly_white",
         )
     fig.show()
     
@@ -134,7 +144,8 @@ def plot_consumption_weekly(df, mode='absolute'):
     if mode == 'relative':
         fig.update_traces(groupnorm='percent')
     fig.update_layout(
-        height=500,
+        # height=400,
+        # width=700,
         template="plotly_white",
         hovermode="x unified",
         legend=dict(

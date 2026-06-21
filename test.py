@@ -2,14 +2,12 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 from src.model.gru import GRURegressor
 from src.model.train import train
 
 #%% CONFIG
-if torch.backends.mps.is_available():
-    device = "mps" # Use Apple Silicon GPU (if available)
-else:
-    device = "cpu" # Default to CPU if no GPU is available
+device = "mps" if torch.backends.mps.is_available() else "cpu"
 
 #%% DATA
 # ---------------------------------------------------
@@ -35,29 +33,11 @@ plt.show()
 # Corresponding to: (batch_size, sequence_length)
 
 window_size = 20
-X = []  # X will contain list of tensor
-y = []
-for i in range(len(noise_series) - window_size):
-    X.append(noise_series[i: i + window_size])
-    y.append(noise_series[i + window_size])
-     
-X = torch.stack(X)  # Stack all tensor 
-y = torch.stack(y)
+windows = noise_series.unfold(0, window_size + 1, 1)
+X = windows[:, :-1].contiguous()
+y = windows[:, -1].contiguous()
 
 print(X.shape)
-print(y.shape)
-
-# ---------------------------------------------------
-# Add feature dimension
-# ---------------------------------------------------
-# This step returns: X with torch.Size([980, 20, 1])
-# Mean: 980 samples, 20 timesteps, 1 feature
-# Corresponding to: (batch_size, sequence_length, input_size)
-
-X = X.unsqueeze(dim=-1)
-y = y.unsqueeze(dim=-1)
-
-print(X.shape)  
 print(y.shape)
 
 #%% MODEL
@@ -69,13 +49,14 @@ model = GRURegressor(
     hidden_size=32,
     output_size=1
     )
-model, training_loss = train(
+loader = DataLoader(TensorDataset(X, y), batch_size=64, shuffle=True)
+model, training_loss, best_epoch = train(
     model, 
-    X, 
-    y, 
-    100,
+    loader,
+    max_epoch=100,
     device=device
     )
+print(f"Best epoch: {best_epoch}, best loss: {training_loss[best_epoch]:.6f}")
 
 #%% EVALUATION
 # ---------------------------------------------------
@@ -93,7 +74,7 @@ plt.show()
 # Eval 1: Test again with sin wave
 # ---------------------------------------------------
 with torch.no_grad():
-    pred = model(X.to(device))
+    pred = model(X.to(device).unsqueeze(-1))
 
 pred_numpy = pred.detach().cpu().numpy().flatten()
 
@@ -126,5 +107,3 @@ plt.show()
 # sns.lineplot(x=t_test, y=torch.sin(0.05 * t_test))
 # sns.lineplot(x=t_test, y=pred_np)
 # plt.show()
-
-

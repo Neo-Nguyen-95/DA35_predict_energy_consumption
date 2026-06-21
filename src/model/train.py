@@ -1,49 +1,70 @@
 #%% LIB
+import copy
+
 from torch import nn
 import torch
-from torch.utils.data import TensorDataset, DataLoader
+
 
 #%% MAIN
 def train(
         model, 
-        X, 
-        y, 
-        max_epoch,
-        batch_size=64,
+        loader,
+        max_epoch=100,
         lr=1e-3,
         device='mps',
-        print_epoch_loss=True
+        print_epoch_loss=True,
+        early_stopping=True,
+        min_delta=1e-3,
+        patience=2,
         ):
     model = model.to(device)
-    dataset = TensorDataset(X, y)
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
     
     criterion = nn.MSELoss()  # Define loss: Mean Squared Error
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)  # Optimizer
     
     training_loss = []
+    best_loss = None
+    best_epoch = 0
+    best_model_state = copy.deepcopy(model.state_dict())
+    epochs_without_improvement = 0
     for epoch in range(max_epoch):
         model.train()
         epoch_loss = 0
         for X_batch, y_batch in loader:
             X_batch = X_batch.to(device)
             y_batch = y_batch.to(device)
+            if X_batch.ndim == 2:
+                X_batch = X_batch.unsqueeze(dim=-1)
+            if y_batch.ndim == 1:
+                y_batch = y_batch.unsqueeze(dim=-1)
             optimizer.zero_grad()
             prediction = model(X_batch)
             loss = criterion(prediction, y_batch)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item() * X_batch.size(0)
-        epoch_loss /= len(dataset)
+        epoch_loss /= len(loader.dataset)
         training_loss.append(epoch_loss)
-        if len(training_loss)>2:
-            epoch_loss_reduction = abs(
-                training_loss[-1] - training_loss[-2]
-                ) / training_loss[-1]
-            if epoch_loss_reduction <= 1e-3:
-                print(f"Stop at epoch: {epoch}")
+
+        is_best_loss = (
+            best_loss is None
+            or epoch_loss < best_loss * (1 - min_delta)
+        )
+        if is_best_loss:
+            best_loss = epoch_loss
+            best_epoch = epoch
+            best_model_state = copy.deepcopy(model.state_dict())
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+
+        if early_stopping:
+            if epochs_without_improvement >= patience:
+                print(f"Stop at epoch: {epoch}; best epoch: {best_epoch}; best loss: {best_loss:.6f}")
                 break
-        if epoch % 10 == 0:
-            print(f"Epoch {epoch}: {loss.item():.4f}")
-            
-    return model, training_loss
+
+        if print_epoch_loss and epoch % 10 == 0:
+            print(f"Epoch {epoch}: {epoch_loss:.4f}")
+
+    model.load_state_dict(best_model_state)
+    return model, training_loss, best_epoch

@@ -4,6 +4,7 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = PROJECT_ROOT / 'data' / 'household_power_consumption.txt'
+
 #%% REPOSITORY
 def fetch_data(data_path=DATA_PATH):
     df = pd.read_csv(DATA_PATH, sep=";")
