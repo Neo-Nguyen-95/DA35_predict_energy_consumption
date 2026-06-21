@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from src.model.train import train
 
 from src.service.input_data import fetch_and_transform_data
-from src.service.transform_data import get_daily_data
+from src.service.transform_data import get_daily_data, get_weekly_data
 from src.model.gru import GRURegressor
 
 import matplotlib.pyplot as plt
@@ -28,15 +28,17 @@ def make_windows(series, window_size):
 #%% CONFIG
 device = "mps" if torch.backends.mps.is_available() else "cpu"
     
-WINDOW_SIZE = 90
+WINDOW_SIZE = 12
 BATCH_SIZE = 32
 #%% DATA
 #%%% Full data
 df = fetch_and_transform_data()
-df_daily = get_daily_data(df)
+# df_daily = get_daily_data(df)
+df_weekly = get_weekly_data(df)
 
 series_data = torch.tensor(
-    df_daily['Daily_power_consumption'], 
+    # df_daily['Daily_power_consumption'],
+    df_weekly['Weekly_energy_consumption'], 
     dtype=torch.float32
     )
 split_point = int(0.8 * len(series_data))
@@ -73,7 +75,7 @@ print(y_test.shape)
 #%%% Training
 model = GRURegressor(
     input_size=1,
-    hidden_size=64,
+    hidden_size=32,
     output_size=1
     )
 model, training_loss, best_epoch = train(
@@ -83,7 +85,7 @@ model, training_loss, best_epoch = train(
     lr=5e-3,
     device=device,
     print_epoch_loss=True,
-    patience=5
+    patience=10
     )
 print(f"Best epoch: {best_epoch}, best loss: {training_loss[best_epoch]:.6f}")
 

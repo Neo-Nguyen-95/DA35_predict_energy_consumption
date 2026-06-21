@@ -55,9 +55,9 @@ plot_consumption_from_different_sources_series(
 
 plot_consumption_from_different_sources_weekly_series(
     df,
-    week_from='2010-11-15',
+    week_from='2006-12-11',
     week_to='2010-11-22',
-    mode='relative'
+    mode='absolute'
     )
 
 # plot_consumption_daily(df_daily)
